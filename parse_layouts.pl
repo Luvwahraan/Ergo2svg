@@ -15,6 +15,7 @@ foreach my $l(@ARGV) {
   $groupLayers{uc $l} = uc $l;
 }
 
+my @colorTab = qw/#00007F #007F00 #7F0000/;
 
 my $path = $layoutSource; $path =~ s/\/[a-zA-Z0-9_.-]+\.c$//;
 $path = "$path/layers";
@@ -88,6 +89,7 @@ my $kcTrad = {
   'AGRV' => 'À',               'COMM' => ',',
   'DOT' => '.',                'ECUT' => 'É',
   'LEFT' => '←',               'RIGHT' => '→',
+  'UP' => '↑',                 'DOWN' => '↓',
 
   '_{6,7}' => 'TRANSPARENT',      'X{7}' => 'NO',
 };
@@ -160,7 +162,7 @@ foreach my $i(sort keys %{$layout}) {
   )->cdata($l);
 
   my $f = "$path/$i.$l";
-  exportPNG($svg, $f) unless $export eq 'export';
+  exportPNG($svg, $f) if $export eq 'export';
   open(FH, '>:utf8',"$f.svg") or die("Problem opening $f.svg");
   print FH $svg->xmlify();
   close FH;
@@ -169,37 +171,52 @@ foreach my $i(sort keys %{$layout}) {
 
 # we want some layers on one svg
 if ((keys %groupLayers) >= 1) {
+  my $color = '#000';
   my $allkeys_svg = SVG::Parser->new()->parsefile('ergodox.svg');
 
+  my $offset = 8;
+  my $count = 1;
   foreach my $i(sort keys %{$layout}) {
     my $l = $layout->{$i}->{'name'};
-    print "Handle $l\n";
 
     if (defined($groupLayers{uc $l})) {
-      my $fontSize = 8;
       # print a key for each rect in svg
+      print "Handle $l in combined svg\n";
       ELEM:foreach my $g($allkeys_svg->getElements('rect')) {
         my $knb = $g->getAttribute('data-key');
-        my $x = $g->getAttribute('x');
-        my $y = $g->getAttribute('y');
+        my $x = $g->getAttribute('x') + 2;
+        my $y = $g->getAttribute('y') + ($offset*($count));
+
+        if ($knb == 23) {
+          print "Offset: $offset, $count -> ", $offset*($count), "\n";
+        }
+
         my $key = $layout->{$i}->{'keys'}->[$knb-1];
+        next ELEM if ($key eq 'TRANSPARENT');
+
         $g->setAttribute("stroke", "#444");
         $g->setAttribute("fill", "#fff");
+
         my $parent = $g->getParentElement();
-        my $text = $parent->text(x => $x+2, y => $y+($i+1)*$fontSize, fill  => '#000',
-            'font-size' => $fontSize, )->cdata($key);
+        my $text = $parent->text(x => $x, y => $y, fill => $color, 'font-size' => 8, )->cdata($key);
+        $text = $allkeys_svg->text(x => 410, y => 5+25*($count), fill  => $color, 'font-size' => 25, )->cdata($l);
       }
+      $color = $colorTab[$count % scalar(@colorTab)];
+      $count++;
     }
 
-    my $text = $allkeys_svg->text(x => 410, y => 50,
-        fill  => '#000000', 'font-size' => 25,
-    )->cdata($l);
   }
 
   # remove attribute for rasterize
   foreach my $g($allkeys_svg->getElements('rect')) {
     $g->setAttribute('data-key', undef);
   }
+
+  my $f = "$path/combined";
+  exportPNG($allkeys_svg, $f) if $export eq 'export';
+  open(FH, '>:utf8',"$f.svg") or die("Problem opening $f.svg");
+  print FH $allkeys_svg->xmlify();
+  close FH;
 }
 
 
