@@ -147,19 +147,19 @@ LINE:while (my $line = <SRC>) {
 }
 close SRC;
 
-foreach my $i(sort keys %{$layout}) {
-  my $l = $layout->{$i}->{'name'};
+foreach my $layerNb(sort keys %{$layout}) {
+  my $l = $layout->{$layerNb}->{'name'};
 
   # import ergodox svg
   my $svg = parseSVG(
       SVG::Parser->new()->parsefile('ergodox.svg'),
-      $layout->{$i}->{'keys'} );
+      $layout->{$layerNb}->{'keys'} );
 
   my $text = $svg->text(x => 410, y => 50,
       fill  => '#000000', 'font-size' => 25,
   )->cdata($l);
 
-  my $f = "$path/$i.$l";
+  my $f = "$path/$layerNb.$l";
   exportPNG($svg, $f) if $export eq 'export';
   open(FH, '>:utf8',"$f.svg") or die("Problem opening $f.svg");
   print FH $svg->xmlify();
@@ -174,8 +174,8 @@ if ((keys %groupLayers) >= 1) {
 
   my $offset = 8;
   my $count = 1;
-  foreach my $i(sort keys %{$layout}) {
-    my $l = $layout->{$i}->{'name'};
+  foreach my $layerNb(sort keys %{$layout}) {
+    my $l = $layout->{$layerNb}->{'name'};
 
     if (defined($groupLayers{uc $l})) {
       # print a key for each rect in svg
@@ -183,14 +183,14 @@ if ((keys %groupLayers) >= 1) {
         my $knb = $g->getAttribute('data-key');
         my $x = $g->getAttribute('x') + 2;
         my $y = $g->getAttribute('y') + ($offset*($count));
-        my $key = $layout->{$i}->{'keys'}->[$knb-1];
+        my $key = $layout->{$layerNb}->{'keys'}->[$knb-1];
         next ELEM if ($key eq 'TRANSPARENT');
 
         $g->setAttribute("stroke", "#444");
         $g->setAttribute("fill", "#fff");
 
         my $parent = $g->getParentElement();
-        my $text = $parent->text(x => $x, y => $y, fill => $color, 'font-size' => 8, )->cdata($key);
+        my $text = $parent->text(x => $x, y => $y, fill => $color, 'font-size' => $offset, )->cdata($key);
         $text = $allkeys_svg->text(x => 410, y => 5+25*($count), fill  => $color, 'font-size' => 25, )->cdata($l);
       }
       $color = $colorTab[$count % scalar(@colorTab)];
