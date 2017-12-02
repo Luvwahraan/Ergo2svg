@@ -87,6 +87,7 @@ my $kcTrad = {
   'EGRV' => 'È',               'EACU' => 'É',
   'AGRV' => 'À',               'COMM' => ',',
   'DOT' => '.',                'ECUT' => 'É',
+  'LEFT' => '←',               'RIGHT' => '→',
 
   '_{6,7}' => 'TRANSPARENT',      'X{7}' => 'NO',
 };
@@ -133,10 +134,10 @@ LINE:while (my $line = <SRC>) {
     # there is no keycode in comments -> next line
     next LINE if ($w =~ m#^(/\*)|( ?\*)|( ?//)#);
 
-    # clean and replace .eycodes for readability on final svg
+    # clean and replace keycodes for readability on final svg
     $w =~ s/^(KC|BP|FR)_//;
     foreach my $p(keys %{$kcTrad}) {
-      $w =~ s/$p/$kcTrad->{$p}/;
+      $w =~ s/^$p$/$kcTrad->{$p}/;
     }
 
     $layout->{$layNb}->{'name'} = $curLayout;
