@@ -19,7 +19,6 @@ my @colorTab = qw/#00007F #007F00 #7F0000/;
 
 my $path = $layoutSource; $path =~ s/\/[a-zA-Z0-9_.-]+\.c$//;
 $path = "$path/layers";
-print "$path\n";
 if ( ! -d "$path" ) {
   mkdir "$path" or die("Problem creating $path\n");
 }
@@ -150,7 +149,6 @@ close SRC;
 
 foreach my $i(sort keys %{$layout}) {
   my $l = $layout->{$i}->{'name'};
-  print "Handle $l\n";
 
   # import ergodox svg
   my $svg = parseSVG(
@@ -181,16 +179,10 @@ if ((keys %groupLayers) >= 1) {
 
     if (defined($groupLayers{uc $l})) {
       # print a key for each rect in svg
-      print "Handle $l in combined svg\n";
       ELEM:foreach my $g($allkeys_svg->getElements('rect')) {
         my $knb = $g->getAttribute('data-key');
         my $x = $g->getAttribute('x') + 2;
         my $y = $g->getAttribute('y') + ($offset*($count));
-
-        if ($knb == 23) {
-          print "Offset: $offset, $count -> ", $offset*($count), "\n";
-        }
-
         my $key = $layout->{$i}->{'keys'}->[$knb-1];
         next ELEM if ($key eq 'TRANSPARENT');
 
@@ -252,8 +244,6 @@ sub parseSVG {
       my $parent = $g->getParentElement();
       my $text = $parent->text(x => $x+2, y => $y+$fontSize, fill  => '#000',
           'font-size' => $fontSize, )->cdata($key);
-      #$g->insertAfter($text);
-      #$g->insertSiblingAfter($text);
     }
     # remove attribute for rasterize
     $g->setAttribute('data-key', undef);
